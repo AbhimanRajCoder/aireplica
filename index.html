@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Replica — Conversational UI</title>
+  <link rel="stylesheet" href="index.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="app-header">
+      <div class="brand">AI Replica</div>
+      <div class="meta">A gentle, empathetic conversational companion</div>
+    </header>
+
+    <section class="controls">
+      <label class="control-label">Tone / Persona</label>
+      <div class="persona-row">
+        <select id="personaSelect" aria-label="Choose persona">
+          <option value="supportive">Supportive — calm & reassuring</option>
+          <option value="playful">Playful — joking & light</option>
+          <option value="stern">Stern — firm & practical</option>
+          <option value="family-like">Family-like — warm, familiar</option>
+        </select>
+        <button id="resetBtn" class="btn">Reset</button>
+      </div>
+      <div class="consent-note">Note: If you want the assistant to mimic a specific real person, make sure you have explicit permission.</div>
+    </section>
+
+    <section id="chat" class="chat" aria-live="polite">
+      <div class="system-message">Tip: start by saying how you're feeling — the assistant will respond with empathy.</div>
+
+      <!-- Chat messages will be inserted here by JS -->
+      <ul id="messages" class="messages" role="log"></ul>
+    </section>
+
+    <form id="composer" class="composer" onsubmit="return false;">
+      <textarea id="input" class="input" placeholder="Write a message..." rows="1" aria-label="Message input"></textarea>
+      <div class="composer-controls">
+        <button id="sendBtn" class="btn primary">Send</button>
+        <button id="emoBtn" class="btn">Detect Emotion</button>
+      </div>
+    </form>
+
+    <footer class="footer">Built with care — configure backend to enable real conversations.</footer>
+  </main>
+
+  <!-- Minimal JS for demo: replace sendMessage with real integration -->
+  <script>
+    const messagesEl = document.getElementById('messages');
+    const input = document.getElementById('input');
+    const sendBtn = document.getElementById('sendBtn');
+    const personaSelect = document.getElementById('personaSelect');
+    const resetBtn = document.getElementById('resetBtn');
+
+    function addMessage(text, who = 'user'){
+      const li = document.createElement('li');
+      li.className = 'message '+who;
+      li.textContent = text;
+      messagesEl.appendChild(li);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // Simple mock behavior: demonstrates emotional intelligence hints.
+    async function sendMessage(){
+      const text = input.value.trim();
+      if(!text) return;
+      addMessage(text, 'user');
+      input.value = '';
+
+      // Show a placeholder assistant reply while the real backend responds
+      const placeholder = document.createElement('li');
+      placeholder.className = 'message assistant loading';
+      placeholder.textContent = 'Thinking...';
+      messagesEl.appendChild(placeholder);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      // Mock emotional analysis + persona shaping
+      const persona = personaSelect.value;
+      const emotionHint = detectEmotionMock(text);
+
+      await new Promise(r => setTimeout(r, 700)); // simulate latency
+
+      // Build assistant reply (replace with actual call to your model)
+      const reply = composeMockReply(text, emotionHint, persona);
+
+      placeholder.remove();
+      addMessage(reply, 'assistant');
+    }
+
+    // Very small heuristic for demo only
+    function detectEmotionMock(text){
+      const t = text.toLowerCase();
+      if(/sad|unhappy|depressed|miserable|down/.test(t)) return 'sad';
+      if(/happy|great|awesome|joy|excited/.test(t)) return 'happy';
+      if(/angry|upset|furious|mad/.test(t)) return 'angry';
+      if(/scared|anxious|worried|nervous/.test(t)) return 'anxious';
+      return 'neutral';
+    }
+
+    function composeMockReply(userText, emotion, persona){
+      const empathic = {
+        sad: "I can hear how heavy that feels — I'm really sorry you're going through this.",
+        happy: "That's wonderful to hear! Tell me more — what's making you feel this way?",
+        angry: "I get why you'd be upset — that sounds frustrating.",
+        anxious: "It's okay to feel worried. Would you like to talk through what's on your mind?",
+        neutral: "Thanks for sharing that. Can you say a bit more?"
+      };
+
+      const personaPrefix = {
+        supportive: "(Supportive) ",
+        playful: "(Playful) ",
+        stern: "(Practical) ",
+        'family-like': "(Like family) "
+      }[persona] || '';
+
+      // A simple 'family-like' modifier to sound warmer
+      const familyModifier = persona === 'family-like' ? "Hey kiddo — " : '';
+
+      return personaPrefix + familyModifier + empathic[emotion] + ' ' + "If you want, I can help think through next steps.";
+    }
+
+    // Event hooks
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); } });
+    resetBtn.addEventListener('click', ()=>{ messagesEl.innerHTML = ''; addSystemMessage('Conversation reset.'); });
+
+    function addSystemMessage(msg){
+      const el = document.createElement('li');
+      el.className = 'message system';
+      el.textContent = msg;
+      messagesEl.appendChild(el);
+    }
+
+    // Initialize
+    addSystemMessage('This is a local demo. Replace mock functions with a proper backend and safety checks.');
+  </script>
